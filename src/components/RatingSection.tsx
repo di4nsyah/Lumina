@@ -62,6 +62,7 @@ export default function RatingSection({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [justStamped, setJustStamped] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -143,15 +144,15 @@ export default function RatingSection({
     const fresh = await fetchStats(String(cached.id), authUser.id);
     setStats(fresh);
     setIsSaving(false);
+    setJustStamped(true);
+    setTimeout(() => setJustStamped(false), 400);
   }
 
   const displayValue = hovered ?? stats.mine ?? 0;
 
   return (
-    <section className="mt-8 rounded-2xl border border-slate-200/60 bg-white p-5">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400">
-        Your rating
-      </h2>
+    <section className="rounded-sm border border-hairline bg-paper p-5">
+      <h2 className="text-xs font-semibold text-muted-ink">Your rating</h2>
 
       <div className="mt-3 flex items-center gap-3">
         <div
@@ -168,49 +169,53 @@ export default function RatingSection({
               onMouseEnter={() => setHovered(star)}
               onClick={() => handleRate(star)}
               aria-label={`Rate ${star} out of 5`}
-              className="rounded-full p-0.5 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 disabled:cursor-wait"
+              className={`rounded-full p-0.5 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                justStamped ? "[animation:stamp_0.3s_ease-out]" : ""
+              }`}
             >
               <Star
                 className={`h-6 w-6 transition-colors ${
                   star <= displayValue
-                    ? "fill-amber-400 text-amber-400"
-                    : "text-slate-300"
+                    ? "fill-accent/80 text-accent/80"
+                    : "text-hairline"
                 }`}
                 strokeWidth={1.75}
               />
             </button>
           ))}
           {isSaving && (
-            <LoaderCircle className="ml-1 h-4 w-4 animate-spin text-slate-400" />
+            <LoaderCircle className="ml-1 h-4 w-4 animate-spin text-muted-ink" />
           )}
         </div>
 
         {stats.average !== null && (
-          <p className="inline-flex items-center gap-1 text-sm text-slate-500">
-            <span className="font-bold text-slate-900">{stats.average}</span>
+          <p className="inline-flex items-center gap-1 text-sm text-muted-ink">
+            <span className="font-display font-semibold text-ink">
+              {stats.average}
+            </span>
             · {stats.count} rating{stats.count === 1 ? "" : "s"}
             {stats.mine !== null && (
-              <span className="text-emerald-600">(yours: {stats.mine})</span>
+              <span className="text-emerald-800">(yours: {stats.mine})</span>
             )}
           </p>
         )}
       </div>
 
       {!user && (
-        <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-400">
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-ink">
           <UserRound className="h-3.5 w-3.5" />
           Click a star to sign in and rate — it takes a second.
         </p>
       )}
 
       {error && (
-        <p role="alert" className="mt-2 text-xs font-medium text-red-500">
+        <p role="alert" className="mt-2 text-xs font-medium text-red-900">
           {error}
         </p>
       )}
 
       {user && loaded && stats.mine === null && !error && (
-        <p className="mt-2 text-xs text-slate-400">
+        <p className="mt-2 text-xs text-muted-ink">
           You haven&apos;t rated this one yet.
         </p>
       )}
