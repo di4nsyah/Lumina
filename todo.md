@@ -16,7 +16,7 @@
 | P1-06 | Genre shelves (horizontal scroll) | Frontend | ✅ | minimal 2 buku/shelf |
 | P1-07 | Search page redesign | Frontend | 🔲 | DIBUKA ULANG 2026-08-25: file masih prototype (`alert()`, tanpa skeleton/empty state). Redesign digabung ke pekerjaan P1-10 |
 | P1-08 | Shared chrome (Header/Footer/Shell) | Frontend | ✅ | |
-| P1-09 | Auth (sign up/sign in) | Backend | 🔲 | |
+| P1-09 | Auth (sign up/sign in) | Backend | ✅ | @supabase/ssr cookie session + proxy guard (`/onboarding`,`/library`,`/account` → redirect `/sign-in?next=`), `/sign-in`,`/sign-up`,`/auth/callback`; smoke test 200/307 OK; middleware→proxy codemod Next16 |
 | P1-10 | Save/bookmark buku ke koleksi | Full-stack | 🔲 | butuh P1-09 |
 | P1-11 | Book detail page | Frontend | 🔲 | |
 | P1-12 | Rating buku | Full-stack | 🔲 | butuh P1-09, P1-11 |
