@@ -11,7 +11,10 @@ import {
   Sparkles,
   Wand2,
 } from "lucide-react";
-import type { GenreShelf } from "@/lib/bookService";
+import type {
+  GenreShelf,
+  RecommendationResult,
+} from "@/lib/bookService";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -67,9 +70,57 @@ function isRecentlyAdded(createdAt?: string): boolean {
 type HomeClientProps = {
   shelves: GenreShelf[];
   user?: AuthUser;
+  recommended?: RecommendationResult | null;
 };
 
-export default function HomeClient({ shelves = [], user = null }: HomeClientProps) {
+function BookCard({ book }: { book: GenreShelf["books"][number] }) {
+  return (
+    <article className="group w-36 shrink-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:w-44">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
+        {book.cover_url ? (
+          <Image
+            src={book.cover_url}
+            alt={`Cover of ${book.title} by ${book.author}`}
+            fill
+            sizes="176px"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-slate-300">
+            <BookOpen className="h-10 w-10" />
+          </div>
+        )}
+
+        {isRecentlyAdded(book.created_at) && (
+          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-600 shadow-sm backdrop-blur-sm">
+            New
+          </span>
+        )}
+
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 transition-all duration-300 group-hover:bg-slate-900/10 group-hover:opacity-100">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-sm backdrop-blur-md">
+            <BookOpen className="h-5 w-5" />
+          </span>
+        </div>
+      </div>
+
+      <div className="p-3.5 sm:p-4">
+        <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 sm:text-base">
+          {book.title}
+        </h3>
+        <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 sm:text-sm">
+          {book.author}
+        </p>
+      </div>
+    </article>
+  );
+}
+
+export default function HomeClient({
+  shelves = [],
+  user = null,
+  recommended = null,
+}: HomeClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
 
@@ -229,6 +280,44 @@ export default function HomeClient({ shelves = [], user = null }: HomeClientProp
         </div>
       </section>
 
+      {recommended && recommended.books.length > 0 && (
+        <section className="relative px-4 pb-4 pt-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {recommended.basis === "fallback" ? "Fresh arrivals" : "Picked for you"}
+                </span>
+                <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                  For You
+                </h2>
+                <p className="mt-2 text-base text-slate-500">
+                  {recommended.basis === "activity"
+                    ? "Based on what you've saved and rated."
+                    : recommended.basis === "preferences"
+                      ? "Based on your favorite genres."
+                      : "Popular with readers right now — save a few books to personalize this."}
+                </p>
+              </div>
+              <Link
+                href="/search"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-300 hover:text-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+              >
+                Find more
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="mt-8 flex gap-4 overflow-x-auto pb-3 sm:gap-5">
+              {recommended.books.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="relative px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
@@ -278,48 +367,8 @@ export default function HomeClient({ shelves = [], user = null }: HomeClientProp
                   </h3>
                   <div className="mt-4 flex gap-4 overflow-x-auto pb-3 sm:gap-5">
                     {shelf.books.map((book) => (
-                      <article
-                        key={book.id}
-                        className="group w-36 shrink-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:w-44"
-                      >
-                        <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
-                          {book.cover_url ? (
-                            <Image
-                              src={book.cover_url}
-                              alt={`Cover of ${book.title} by ${book.author}`}
-                              fill
-                              sizes="176px"
-                              className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-slate-300">
-                              <BookOpen className="h-10 w-10" />
-                            </div>
-                          )}
-
-                          {isRecentlyAdded(book.created_at) && (
-                            <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-600 shadow-sm backdrop-blur-sm">
-                              New
-                            </span>
-                          )}
-
-                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 transition-all duration-300 group-hover:bg-slate-900/10 group-hover:opacity-100">
-                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-sm backdrop-blur-md">
-                              <BookOpen className="h-5 w-5" />
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="p-3.5 sm:p-4">
-                          <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 sm:text-base">
-                            {book.title}
-                          </h3>
-                          <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 sm:text-sm">
-                            {book.author}
-                          </p>
-                        </div>
-                      </article>
-                    ))}
+                        <BookCard key={book.id} book={book} />
+                      ))}
                   </div>
                 </div>
               ))}

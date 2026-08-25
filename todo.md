@@ -21,7 +21,7 @@
 | P1-11 | Book detail page | Frontend | ✅ | `/book/[id]` dual-source: uuid → Supabase cache, else Google volume API; loading.tsx skeleton; styled not-found panel; SaveButton terintegrasi. Live test: cached-row path 200 markup-ok; google-path dibatasi kuota API harian (429) tapi kode symmetric |
 | P1-12 | Rating buku | Full-stack | ✅ | policies+unique index (user_id,book_id) via SQL editor; `RatingSection` bintang 1-5 upsert onConflict, avg+jumlah live, anon → redirect sign-in. Render verified; klik-rate E2E menyusul manual test user |
 | P1-13 | Onboarding preference selection | Frontend | ✅ | `/onboarding` (dilindungi proxy): pilih ≥3 dari 18 genre → upsert `user_profiles` (onConflict id), `onboarded_at` terisi saat continue, skippable tanpa menandai selesai, preselect profil lama; anon → redirect sign-in verified |
-| P1-14 | Rekomendasi content-based | Backend | 🔲 | butuh P1-10, P1-13 |
+| P1-14 | Rekomendasi content-based | Backend | ✅ | `getRecommendedBooks()` di bookService (server cookie client → RLS-aware): basis `activity` (saved+rated genre) > `preferences` (onboarding) > `fallback` (recent); shelf "For You" di Home dengan subtitle sesuai basis; exclude buku yang sudah diinteraksi; dedupe by title |
 | P1-15 | Deploy ke Vercel | DevOps | 🔲 | |
 
 ## Bug/Fix Log (histori — sudah selesai)
