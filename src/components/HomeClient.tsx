@@ -14,11 +14,7 @@ import {
   Wand2,
   X,
 } from "lucide-react";
-import type { CachedBook } from "@/lib/bookService";
-
-// ---------------------------------------------------------------------------
-// Static content (unrelated to your Supabase data)
-// ---------------------------------------------------------------------------
+import type { GenreShelf } from "@/lib/bookService";
 
 type NavLink = {
   label: string;
@@ -69,8 +65,6 @@ const FEATURE_CARDS: FeatureCard[] = [
   },
 ];
 
-// A book counts as "New" if it was cached within the last week — computed
-// from real created_at data rather than a fabricated badge.
 function isRecentlyAdded(createdAt?: string): boolean {
   if (!createdAt) return false;
   const addedAt = new Date(createdAt).getTime();
@@ -80,20 +74,14 @@ function isRecentlyAdded(createdAt?: string): boolean {
 }
 
 type HomeClientProps = {
-  books: CachedBook[];
+  shelves: GenreShelf[];
 };
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
-export default function HomeClient({ books }: HomeClientProps) {
+export default function HomeClient({ shelves = [] }: HomeClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
 
-  // Ambient glow that drifts loosely toward the cursor inside the hero —
-  // a small nod to "Let AI Paint Your Next Story": the canvas reacts to you.
   const heroRef = useRef<HTMLElement>(null);
   const [glow, setGlow] = useState({ x: 50, y: 38 });
   const prefersReducedMotion = useRef(false);
@@ -116,13 +104,11 @@ export default function HomeClient({ books }: HomeClientProps) {
 
   function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // Wire this up to your /search route — left as a no-op stub.
     console.log("Searching Lumina for:", searchQuery || "(empty query)");
   }
 
   return (
     <div className="min-h-screen bg-[#FBFBF9] text-slate-900 antialiased">
-      {/* Subtle paper-grain overlay for the ambient-editorial feel */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 opacity-[0.035] mix-blend-multiply"
@@ -132,9 +118,6 @@ export default function HomeClient({ books }: HomeClientProps) {
         }}
       />
 
-      {/* -------------------------------------------------------------- */}
-      {/* Header / Navbar                                                 */}
-      {/* -------------------------------------------------------------- */}
       <header className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
           <Link
@@ -215,15 +198,11 @@ export default function HomeClient({ books }: HomeClientProps) {
         )}
       </header>
 
-      {/* -------------------------------------------------------------- */}
-      {/* Hero                                                            */}
-      {/* -------------------------------------------------------------- */}
       <section
         ref={heroRef}
         onMouseMove={handleHeroMouseMove}
         className="relative isolate overflow-hidden px-4 pb-24 pt-20 sm:px-6 sm:pt-28 lg:px-8"
       >
-        {/* Static ambient shaders */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -left-32 -top-24 h-[26rem] w-[26rem] rounded-full bg-amber-300/30 blur-3xl"
@@ -232,7 +211,6 @@ export default function HomeClient({ books }: HomeClientProps) {
           aria-hidden="true"
           className="pointer-events-none absolute -right-24 top-40 h-[22rem] w-[22rem] rounded-full bg-orange-300/25 blur-3xl"
         />
-        {/* Cursor-reactive glow — the canvas "painting" alongside you */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-200/30 blur-3xl transition-[left,top] duration-700 ease-out"
@@ -296,9 +274,6 @@ export default function HomeClient({ books }: HomeClientProps) {
         </div>
       </section>
 
-      {/* -------------------------------------------------------------- */}
-      {/* Feature Highlights                                              */}
-      {/* -------------------------------------------------------------- */}
       <section className="relative px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
@@ -341,9 +316,6 @@ export default function HomeClient({ books }: HomeClientProps) {
         </div>
       </section>
 
-      {/* -------------------------------------------------------------- */}
-      {/* Gallery — driven by your Supabase `books` table                */}
-      {/* -------------------------------------------------------------- */}
       <section className="relative px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
@@ -352,7 +324,7 @@ export default function HomeClient({ books }: HomeClientProps) {
                 The Gallery
               </h2>
               <p className="mt-2 text-base text-slate-500">
-                The latest titles saved to your library.
+                Recommended by genre, drawn from what&apos;s already in your library.
               </p>
             </div>
             <Link
@@ -364,17 +336,17 @@ export default function HomeClient({ books }: HomeClientProps) {
             </Link>
           </div>
 
-          {books.length === 0 ? (
+          {shelves.length === 0 ? (
             <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/50 px-6 py-16 text-center">
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-500">
                 <BookOpen className="h-6 w-6" />
               </span>
               <h3 className="mt-4 text-base font-semibold text-slate-900">
-                Your gallery is empty — for now
+                No genre shelves yet
               </h3>
               <p className="mt-1.5 max-w-sm text-sm text-slate-500">
-                Books you search for and save get cached here automatically.
-                Find your first title to see it show up.
+                A shelf appears once at least two saved books share a genre.
+                Search for a few titles to get your first one going.
               </p>
               <Link
                 href="/search"
@@ -385,59 +357,64 @@ export default function HomeClient({ books }: HomeClientProps) {
               </Link>
             </div>
           ) : (
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
-              {books.map((book) => (
-                <article
-                  key={book.id}
-                  className="group overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
-                    {book.cover_url ? (
-                      <Image
-                        src={book.cover_url}
-                        alt={`Cover of ${book.title} by ${book.author}`}
-                        fill
-                        sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-slate-300">
-                        <BookOpen className="h-10 w-10" />
-                      </div>
-                    )}
+            <div className="mt-10 flex flex-col gap-12">
+              {shelves.map((shelf) => (
+                <div key={shelf.genre}>
+                  <h3 className="text-lg font-bold text-slate-900 sm:text-xl">
+                    {shelf.genre}
+                  </h3>
+                  <div className="mt-4 flex gap-4 overflow-x-auto pb-3 sm:gap-5">
+                    {shelf.books.map((book) => (
+                      <article
+                        key={book.id}
+                        className="group w-36 shrink-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:w-44"
+                      >
+                        <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
+                          {book.cover_url ? (
+                            <Image
+                              src={book.cover_url}
+                              alt={`Cover of ${book.title} by ${book.author}`}
+                              fill
+                              sizes="176px"
+                              className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-slate-300">
+                              <BookOpen className="h-10 w-10" />
+                            </div>
+                          )}
 
-                    {isRecentlyAdded(book.created_at) && (
-                      <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-600 shadow-sm backdrop-blur-sm">
-                        New
-                      </span>
-                    )}
+                          {isRecentlyAdded(book.created_at) && (
+                            <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-600 shadow-sm backdrop-blur-sm">
+                              New
+                            </span>
+                          )}
 
-                    {/* Sleek blur hover affordance */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 transition-all duration-300 group-hover:bg-slate-900/10 group-hover:opacity-100">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-sm backdrop-blur-md">
-                        <BookOpen className="h-5 w-5" />
-                      </span>
-                    </div>
+                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 transition-all duration-300 group-hover:bg-slate-900/10 group-hover:opacity-100">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-sm backdrop-blur-md">
+                              <BookOpen className="h-5 w-5" />
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 sm:p-4">
+                          <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 sm:text-base">
+                            {book.title}
+                          </h3>
+                          <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 sm:text-sm">
+                            {book.author}
+                          </p>
+                        </div>
+                      </article>
+                    ))}
                   </div>
-
-                  <div className="p-3.5 sm:p-4">
-                    <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 sm:text-base">
-                      {book.title}
-                    </h3>
-                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 sm:text-sm">
-                      {book.author}
-                    </p>
-                  </div>
-                </article>
+                </div>
               ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* -------------------------------------------------------------- */}
-      {/* Footer                                                          */}
-      {/* -------------------------------------------------------------- */}
       <footer className="relative border-t border-slate-200/60 px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
           <Link href="/" className="flex items-center gap-2">

@@ -8,6 +8,7 @@ export async function getOrSaveBook(bookdata: {
     title: string;
     author: string;
     cover_url: string;
+    genre?: string;
 }) {
     const {data: existingBook} = await supabase
     .from('books')
@@ -16,6 +17,17 @@ export async function getOrSaveBook(bookdata: {
     .single();
 
     if (existingBook) {
+        if (!existingBook.genre && bookdata.genre) {
+            const {data: updatedBook} = await supabase
+            .from('books')
+            .update({genre: bookdata.genre})
+            .eq('id', existingBook.id)
+            .select()
+            .single();
+
+            return updatedBook ?? existingBook;
+        }
+
         return existingBook;
     }
 
@@ -33,21 +45,13 @@ export async function getOrSaveBook(bookdata: {
     return newBook;
 }
 
-// ---------------------------------------------------------------------------
-// Added for the homepage Gallery — reads back whatever's already cached in
-// Supabase instead of hitting Google Books on every homepage load.
-//
-// Assumes your `books` table has a `created_at` column (Supabase adds this
-// by default when a table is created via the dashboard). If yours doesn't,
-// this query will error and simply return an empty array — drop the
-// `.order(...)` line below if that happens.
-// ---------------------------------------------------------------------------
 
 export type CachedBook = {
     id: string | number;
     title: string;
     author: string;
     cover_url: string;
+    genre?: string;
     created_at?: string;
 };
 
@@ -64,4 +68,47 @@ export async function getRecentBooks(limit: number = 8): Promise<CachedBook[]> {
     }
 
     return (data as CachedBook[]) ?? [];
+}
+
+export type GenreShelf = {
+    genre: string;
+    books: CachedBook[];
+};
+
+/**
+ * @param pool      
+ * @param booksPerShelf 
+ * @param maxShelves 
+ */
+export async function getBooksByGenre(
+    pool: number = 40,
+    booksPerShelf: number = 6,
+    maxShelves: number = 5
+): Promise<GenreShelf[]> {
+    const {data, error} = await supabase
+    .from('books')
+    .select('*')
+    .order('created_at', {ascending: false})
+    .limit(pool);
+
+    if (error) {
+        console.error('Error fetching books for genre grouping:', error);
+        return [];
+    }
+
+    const books = (data as CachedBook[]) ?? [];
+    const grouped = new Map<string, CachedBook[]>();
+
+    for (const book of books) {
+        const genre = book.genre?.trim();
+        if (!genre) continue;
+        const existing = grouped.get(genre) ?? [];
+        existing.push(book);
+        grouped.set(genre, existing);
+    }
+
+    return Array.from(grouped.entries())
+        .filter(([, shelfBooks]) => shelfBooks.length >= 2) // no single-book shelves
+        .map(([genre, shelfBooks]) => ({genre, books: shelfBooks.slice(0, booksPerShelf)}))
+        .slice(0, maxShelves);
 }
