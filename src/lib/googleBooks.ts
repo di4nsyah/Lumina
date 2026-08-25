@@ -26,7 +26,15 @@ type GoogleVolume = {
     volumeInfo?: GoogleVolumeInfo;
 };
 
-export async function searchGoogleBooks(query: string): Promise<GoogleBook[]> {
+export type SearchOutcome =
+    | {ok: true; books: GoogleBook[]}
+    | {ok: false; reason: 'quota' | 'unavailable'};
+
+/**
+ * Daily-quota exhaustion (HTTP 429) is an EXPECTED state for a free API key,
+ * so it degrades quietly instead of spamming error logs.
+ */
+export async function searchGoogleBooks(query: string): Promise<SearchOutcome> {
     try {
         const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
         const targetUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&key=${apiKey}`;
@@ -34,13 +42,16 @@ export async function searchGoogleBooks(query: string): Promise<GoogleBook[]> {
         const res = await fetch(targetUrl);
 
         if (!res.ok) {
-            console.error('Google Books API error:', res.status, res.statusText);
-            return [];
+            if (res.status === 429) {
+                return {ok: false, reason: 'quota'};
+            }
+            console.warn('Google Books API issue:', res.status);
+            return {ok: false, reason: 'unavailable'};
         }
 
         const data = (await res.json()) as {items?: GoogleVolume[]};
 
-        return (data.items ?? []).map((item) => ({
+        const books = (data.items ?? []).map((item) => ({
             google_id: item.id,
             title: item.volumeInfo?.title || 'Unknown Title',
             author: item.volumeInfo?.authors?.join(', ') || 'Unknown Author',
@@ -48,9 +59,10 @@ export async function searchGoogleBooks(query: string): Promise<GoogleBook[]> {
             description: item.volumeInfo?.description || '',
             genre: extractPrimaryGenre(item.volumeInfo?.categories),
         }));
+        return {ok: true, books};
     } catch (error) {
-        console.error('Error fetching Google Books data:', error);
-        return [];
+        console.warn('Error fetching Google Books data:', error);
+        return {ok: false, reason: 'unavailable'};
     }
 }
 
@@ -62,7 +74,10 @@ export async function getBookById(googleId: string): Promise<GoogleBook | null> 
         const res = await fetch(targetUrl);
 
         if (!res.ok) {
-            console.error('Google Books API error:', res.status, res.statusText);
+            // Quota exhaustion and lookup misses are normal states here.
+            if (res.status !== 429) {
+                console.warn('Google Books API issue:', res.status);
+            }
             return null;
         }
 
@@ -77,7 +92,7 @@ export async function getBookById(googleId: string): Promise<GoogleBook | null> 
             genre: extractPrimaryGenre(item.volumeInfo?.categories),
         };
     } catch (error) {
-        console.error('Error fetching Google Books detail:', error);
+        console.warn('Error fetching Google Books detail:', error);
         return null;
     }
 }

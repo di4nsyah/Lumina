@@ -32,7 +32,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const siteUser: SiteHeaderUser = user ? { email: user.email ?? "" } : null;
 
   // Server-driven search: the URL is the single source of truth.
-  const results = query ? await searchGoogleBooks(query) : [];
+  const outcome = query ? await searchGoogleBooks(query) : null;
+  const results = outcome?.ok ? outcome.books : [];
 
   const savedMap =
     user && siteUser && results.length > 0
@@ -59,11 +60,26 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             />
           )}
 
-          {query && (
+          {query && outcome?.ok && (
             <p className="text-sm text-muted-ink" aria-live="polite">
               {results.length} result{results.length === 1 ? "" : "s"} for{" "}
               <span className="font-semibold text-ink">&ldquo;{query}&rdquo;</span>
             </p>
+          )}
+
+          {query && outcome && !outcome.ok && (
+            <EmptyState
+              title={
+                outcome.reason === "quota"
+                  ? "Search is taking a breather"
+                  : "Search is unavailable right now"
+              }
+              body={
+                outcome.reason === "quota"
+                  ? "We've hit our daily book-search limit. The shelves will be restocked tomorrow — saving and rating still work."
+                  : "Something went wrong reaching the book catalogue. Try again in a moment."
+              }
+            />
           )}
 
           {query && results.length > 0 && (
