@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { BookOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import OnboardingClient from "@/components/OnboardingClient";
+import Wordmark from "@/components/ui/Wordmark";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Personalize — LuminaBooks",
+  title: "Personalize",
 };
 
 export default async function OnboardingPage() {
@@ -31,11 +31,9 @@ export default async function OnboardingPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] text-slate-900 antialiased">
-      <div className="flex justify-center pt-10">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
-          <BookOpen className="h-6 w-6" strokeWidth={2.25} />
-        </span>
+    <div className="min-h-screen bg-paper text-ink antialiased">
+      <div className="flex justify-center pt-12">
+        <Wordmark />
       </div>
       <OnboardingClient initialGenres={genres} />
     </div>

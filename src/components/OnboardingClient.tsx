@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, LoaderCircle } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
+import { cn } from "@/lib/cn";
+import Button from "@/components/ui/Button";
+import Squiggle from "@/components/decor/Squiggle";
+import Botanical from "@/components/decor/Botanical";
 import { createClient } from "@/lib/supabase/client";
 
 const GENRE_OPTIONS: string[] = [
@@ -37,6 +41,7 @@ export default function OnboardingClient({
   const [selected, setSelected] = useState<Set<string>>(new Set(initialGenres));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [justStamped, setJustStamped] = useState(false);
 
   function toggle(genre: string) {
     setSelected((prev) => {
@@ -45,6 +50,8 @@ export default function OnboardingClient({
       else next.add(genre);
       return next;
     });
+    setJustStamped(true);
+    setTimeout(() => setJustStamped(false), 400);
   }
 
   async function persist(onboardedAt: string | null): Promise<boolean> {
@@ -97,61 +104,71 @@ export default function OnboardingClient({
   const isDone = selected.size >= 3;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <div className="relative mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <Botanical
+        variant="branch"
+        className="absolute -left-10 top-10 h-44 w-32 rotate-12"
+      />
+
       <div className="text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
-          Welcome to Lumina
-        </span>
-        <h1 className="mt-4 text-balance text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+        <p className="font-display text-sm italic text-muted-ink">
+          welcome to Lumina
+        </p>
+        <h1 className="mt-3 max-w-xl text-balance font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
           What do you love{" "}
-          <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+          <span className="relative inline-block">
             reading?
+            <Squiggle className="absolute -bottom-2 left-0" />
           </span>
         </h1>
-        <p className="mx-auto mt-4 max-w-lg text-base text-slate-500">
-          Pick at least three genres and we&apos;ll shape your shelves around
-          them. You can change these anytime.
+        <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-ink">
+          Stick a stamp on at least three genres and we&apos;ll shape your
+          shelves around them. You can peel them off anytime.
         </p>
       </div>
 
-      <div className="mt-10 flex flex-wrap justify-center gap-2.5">
-        {GENRE_OPTIONS.map((genre) => {
-          const isActive = selected.has(genre);
-          return (
-            <button
-              key={genre}
-              type="button"
-              onClick={() => toggle(genre)}
-              aria-pressed={isActive}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${
-                isActive
-                  ? "border-orange-500 bg-orange-500 text-white shadow-sm"
-                  : "border-slate-200 bg-white/70 text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-              }`}
-            >
-              {isActive && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
-              {genre}
-            </button>
-          );
-        })}
+      <div className="mx-auto mt-12 max-w-xl rounded-sm border border-hairline bg-surface p-8 shadow-sm sm:p-10">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-4">
+          {GENRE_OPTIONS.map((genre, index) => {
+            const isActive = selected.has(genre);
+            return (
+              <button
+                key={genre}
+                type="button"
+                onClick={() => toggle(genre)}
+                aria-pressed={isActive}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border border-dashed px-4 py-2 text-xs font-semibold uppercase tracking-wide transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+                  isActive
+                    ? "border-accent bg-accent/15 text-accent hover:bg-accent/20"
+                    : "border-hairline bg-paper text-muted-ink hover:border-accent/40 hover:text-accent",
+                  justStamped && isActive && "[animation:stamp_0.25s_ease-out]",
+                )}
+                style={{ rotate: `${((index % 5) - 2) * (isActive ? 1.2 : 0.8)}deg` }}
+              >
+                {isActive && <Check className="h-3 w-3" strokeWidth={3} />}
+                {genre}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {error && (
         <p
           role="alert"
-          className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-600"
+          className="mx-auto mt-6 max-w-md border border-dashed border-red-800/30 bg-red-900/5 px-4 py-3 text-center text-sm text-red-900"
         >
           {error}
         </p>
       )}
 
       <div className="mt-10 flex flex-col items-center gap-4">
-        <button
-          type="button"
+        <Button
           onClick={handleContinue}
           disabled={!isDone || isSaving}
+          className="px-8 py-3.5"
           aria-live="polite"
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-8 py-3.5 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-orange-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSaving ? (
             <>
@@ -159,14 +176,11 @@ export default function OnboardingClient({
               <LoaderCircle className="h-4 w-4 animate-spin" />
             </>
           ) : (
-            <>
-              Continue{selected.size > 0 ? ` (${selected.size}/3)` : ""}
-              <ArrowRight className="h-4 w-4" />
-            </>
+            <>Continue{selected.size > 0 ? ` (${selected.size}/3)` : ""}</>
           )}
-        </button>
+        </Button>
         {!isDone && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-ink">
             Select {3 - selected.size} more genre
             {3 - selected.size === 1 ? "" : "s"} to continue
           </p>
@@ -175,7 +189,7 @@ export default function OnboardingClient({
           type="button"
           onClick={handleSkip}
           disabled={isSaving}
-          className="text-sm font-medium text-slate-400 transition-colors hover:text-slate-600"
+          className="text-sm font-medium text-muted-ink underline-offset-4 transition-colors hover:text-ink hover:underline"
         >
           Skip for now
         </button>
