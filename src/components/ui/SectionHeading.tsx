@@ -1,5 +1,4 @@
 import Squiggle from "@/components/decor/Squiggle";
-import { cn } from "@/lib/cn";
 
 type SectionHeadingProps = {
   title: string;
