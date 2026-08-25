@@ -1,6 +1,7 @@
 import {
   getBooksByGenre,
   getFavoriteGenres,
+  getRecentBooks,
   getRecommendedBooks,
   type RecommendationResult,
 } from "@/lib/bookService";
@@ -11,8 +12,9 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const supabase = await createClient();
-  const [shelves, session] = await Promise.all([
+  const [shelves, staffPicks, session] = await Promise.all([
     getBooksByGenre(),
+    getRecentBooks(3),
     supabase.auth.getUser(),
   ]);
   const user = session.data.user;
@@ -29,6 +31,7 @@ export default async function Home() {
   return (
     <HomeClient
       shelves={shelves}
+      staffPicks={staffPicks}
       user={user ? { email: user.email ?? "" } : null}
       recommended={recommended}
     />

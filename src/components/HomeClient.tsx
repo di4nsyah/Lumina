@@ -1,379 +1,310 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import {
-  ArrowRight,
-  BookOpen,
-  Search,
-  Sparkles,
-  Wand2,
-} from "lucide-react";
+import { ArrowRight, BookOpen, Search } from "lucide-react";
 import type {
+  CachedBook,
   GenreShelf,
   RecommendationResult,
 } from "@/lib/bookService";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import SectionHeading from "@/components/ui/SectionHeading";
+import StampBadge from "@/components/ui/StampBadge";
+import Reveal from "@/components/decor/Reveal";
+import TapeStrip from "@/components/decor/TapeStrip";
+import TornEdge from "@/components/decor/TornEdge";
+import Squiggle from "@/components/decor/Squiggle";
 
 type AuthUser = {
   email: string;
 } | null;
 
-const GENRE_TAGS: string[] = ["Sci-Fi", "Fantasy", "Romance", "Mystery", "Biography"];
-
-type FeatureCard = {
-  icon: LucideIcon;
-  iconBg: string;
-  iconColor: string;
-  title: string;
-  description: string;
-};
-
-const FEATURE_CARDS: FeatureCard[] = [
-  {
-    icon: Sparkles,
-    iconBg: "bg-rose-100",
-    iconColor: "text-rose-500",
-    title: "Describe the Mood",
-    description:
-      "Tell Lumina how you want a book to feel. It turns a mood, a pace, even a single scene, into a shortlist that matches.",
-  },
-  {
-    icon: Wand2,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
-    title: "Taste Calibration",
-    description:
-      "Every rating and reread sharpens your Style Fingerprint, so each new recommendation lands a little closer to right.",
-  },
-  {
-    icon: BookOpen,
-    iconBg: "bg-indigo-100",
-    iconColor: "text-indigo-500",
-    title: "Living Synopsis",
-    description:
-      "Skip the back-cover blurb. Get a preview written for exactly how much of the story you already know.",
-  },
+const GENRE_TAGS: string[] = [
+  "Sci-Fi",
+  "Fantasy",
+  "Romance",
+  "Mystery",
+  "Biography",
 ];
 
-function isRecentlyAdded(createdAt?: string): boolean {
-  if (!createdAt) return false;
-  const addedAt = new Date(createdAt).getTime();
-  if (Number.isNaN(addedAt)) return false;
-  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-  return Date.now() - addedAt < sevenDaysMs;
+function BookCover({ book }: { book: CachedBook }) {
+  return (
+    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-sm border border-hairline bg-surface">
+      {book.cover_url ? (
+        <Image
+          src={book.cover_url}
+          alt={`Cover of ${book.title} by ${book.author}`}
+          fill
+          sizes="(max-width: 640px) 45vw, 176px"
+          className="object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-hairline">
+          <BookOpen className="h-10 w-10" />
+        </div>
+      )}
+    </div>
+  );
 }
 
-type HomeClientProps = {
-  shelves: GenreShelf[];
-  user?: AuthUser;
-  recommended?: RecommendationResult | null;
-};
-
-function BookCard({ book }: { book: GenreShelf["books"][number] }) {
+function BookCard({ book }: { book: CachedBook }) {
   return (
-    <article className="group w-36 shrink-0 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:w-44">
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
-        {book.cover_url ? (
-          <Image
-            src={book.cover_url}
-            alt={`Cover of ${book.title} by ${book.author}`}
-            fill
-            sizes="176px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-slate-300">
-            <BookOpen className="h-10 w-10" />
-          </div>
-        )}
-
-        {isRecentlyAdded(book.created_at) && (
-          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-600 shadow-sm backdrop-blur-sm">
-            New
-          </span>
-        )}
-
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/0 opacity-0 transition-all duration-300 group-hover:bg-slate-900/10 group-hover:opacity-100">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/80 text-slate-900 shadow-sm backdrop-blur-md">
-            <BookOpen className="h-5 w-5" />
-          </span>
+    <article className="w-36 shrink-0 sm:w-44">
+      <Link href={`/book/${book.id}`} className="group block focus-visible:outline-none">
+        <div className="transition-transform duration-300 group-hover:-translate-y-0.5">
+          <BookCover book={book} />
         </div>
-      </div>
-
-      <div className="p-3.5 sm:p-4">
-        <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 sm:text-base">
+        <h3 className="mt-2.5 line-clamp-1 font-display text-sm font-semibold text-ink sm:text-base">
           {book.title}
         </h3>
-        <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 sm:text-sm">
+        <p className="mt-0.5 line-clamp-1 text-xs text-muted-ink sm:text-sm">
           {book.author}
         </p>
-      </div>
+      </Link>
     </article>
   );
 }
 
+function ShelfRow({
+  children,
+  stagger = true,
+}: {
+  children: React.ReactNode[];
+  stagger?: boolean;
+}) {
+  return (
+    <div className="mt-6 flex gap-5 overflow-x-auto border-b border-hairline pb-4">
+      {children.map((child, index) =>
+        stagger ? (
+          <Reveal key={(child as { key?: string })?.key ?? index} delay={Math.min(index, 5) * 60}>
+            {child}
+          </Reveal>
+        ) : (
+          child
+        ),
+      )}
+    </div>
+  );
+}
+
+type FeatureCard = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+const FEATURE_NOTES: FeatureCard[] = [
+  {
+    icon: BookOpen,
+    title: "Staff picks, honestly made",
+    description:
+      "Every shelf starts from books people actually saved — no paid placements, no algorithmic filler.",
+  },
+];
+
 export default function HomeClient({
   shelves = [],
+  staffPicks = [],
   user = null,
   recommended = null,
 }: HomeClientProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeGenre, setActiveGenre] = useState<string | null>(null);
-
-  const heroRef = useRef<HTMLElement>(null);
-  const [glow, setGlow] = useState({ x: 50, y: 38 });
-  const prefersReducedMotion = useRef(false);
-
-  useEffect(() => {
-    prefersReducedMotion.current =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }, []);
-
-  function handleHeroMouseMove(event: React.MouseEvent<HTMLElement>) {
-    if (prefersReducedMotion.current) return;
-    const rect = heroRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setGlow({
-      x: ((event.clientX - rect.left) / rect.width) * 100,
-      y: ((event.clientY - rect.top) / rect.height) * 100,
-    });
-  }
+  const router = useRouter();
+  const [query, setQuery] = useState("");
 
   function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    console.log("Searching Lumina for:", searchQuery || "(empty query)");
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
-  return (
-    <div className="min-h-screen bg-[#FBFBF9] text-slate-900 antialiased">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 opacity-[0.035] mix-blend-multiply"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-        }}
-      />
+  const forYouSubtitle =
+    recommended?.basis === "activity"
+      ? "Based on what you've saved and rated."
+      : recommended?.basis === "preferences"
+        ? "Based on your favorite genres."
+        : "Popular right now — save a few books to personalize this.";
 
+  return (
+    <div className="min-h-screen bg-paper text-ink antialiased">
       <SiteHeader user={user} />
 
-      <section
-        ref={heroRef}
-        onMouseMove={handleHeroMouseMove}
-        className="relative isolate overflow-hidden px-4 pb-24 pt-20 sm:px-6 sm:pt-28 lg:px-8"
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-32 -top-24 h-[26rem] w-[26rem] rounded-full bg-amber-300/30 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-24 top-40 h-[22rem] w-[22rem] rounded-full bg-orange-300/25 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-200/30 blur-3xl transition-[left,top] duration-700 ease-out"
-          style={{ left: `${glow.x}%`, top: `${glow.y}%` }}
-        />
+      {/* Masthead */}
+      <section className="relative bg-surface">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-14 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-10 lg:pt-24 xl:gap-16">
+          <Reveal>
+            <p className="font-display text-sm italic text-muted-ink">
+              est. for people with too many bookmarks
+            </p>
+            <h1 className="mt-4 max-w-xl text-balance font-display text-5xl font-semibold leading-[1.08] tracking-tight text-ink sm:text-6xl">
+              Find the book that{" "}
+              <span className="relative inline-block">
+                finds you.
+                <Squiggle className="absolute -bottom-3 left-0" />
+              </span>
+            </h1>
 
-        <div className="relative mx-auto max-w-4xl text-center">
-          <h1 className="text-balance text-5xl font-extrabold tracking-tight text-slate-900 sm:text-6xl md:text-7xl md:leading-[1.05]">
-            Discover Your Next{" "}
-            <span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-              Literary Masterpiece
-            </span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-balance text-base text-slate-500 sm:text-lg">
-            Lumina reads the mood, pace, and prose style you&apos;re chasing, then
-            matches it against a living map of stories to surface the one
-            you didn&apos;t know you were looking for.
-          </p>
-
-          <form
-            onSubmit={handleSearchSubmit}
-            className="mx-auto mt-10 flex max-w-2xl items-center gap-2 rounded-full border border-slate-200/60 bg-white p-2 pl-5 shadow-sm transition-shadow focus-within:shadow-md"
-          >
-            <Search className="h-5 w-5 shrink-0 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Describe a mood, an author, or a feeling..."
-              className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 sm:text-base"
-            />
-            <button
-              type="submit"
-              aria-label="Search"
-              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-orange-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 sm:px-6"
+            <form
+              onSubmit={handleSearchSubmit}
+              className="mt-9 flex max-w-md items-center gap-2"
             >
-              <span className="hidden sm:inline">Search</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </form>
+              <Input
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="A mood, an author, a feeling..."
+                aria-label="Search books"
+                className="border-ink/25"
+              />
+              <Button type="submit" aria-label="Search" className="shrink-0 px-4">
+                <Search className="h-4 w-4" />
+                <span className="sr-only">Search</span>
+              </Button>
+            </form>
 
-          <div className="mx-auto mt-7 flex max-w-xl flex-wrap items-center justify-center gap-2.5">
-            {GENRE_TAGS.map((genre) => {
-              const isActive = activeGenre === genre;
-              return (
-                <button
-                  key={genre}
-                  type="button"
-                  onClick={() => setActiveGenre(isActive ? null : genre)}
-                  className={`rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 sm:text-sm ${
-                    isActive
-                      ? "border-orange-500 bg-orange-500 text-white shadow-sm"
-                      : "border-slate-200 bg-white/70 text-slate-500 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-                  }`}
-                >
+            <div className="mt-7 flex max-w-lg flex-wrap items-center gap-x-3 gap-y-3">
+              {GENRE_TAGS.map((genre, index) => (
+                <StampBadge key={genre} rotate={index % 2 === 0 ? -2 : 1.5}>
                   {genre}
-                </button>
-              );
-            })}
-          </div>
+                </StampBadge>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Staff picks — taped to the wall */}
+          {staffPicks.length > 0 && (
+            <Reveal delay={150}>
+              <div className="relative mx-auto w-fit rotate-1 rounded-sm border border-hairline bg-paper px-8 pb-8 pt-10 shadow-sm lg:mx-0">
+                <TapeStrip angle={-5} className="-top-3 left-6" />
+                <TapeStrip angle={3} className="-top-2 right-8" />
+                <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-8deg] select-none font-display text-lg italic text-muted-ink/30">
+                  staff picks
+                </p>
+                <div className="relative flex items-end justify-center gap-4">
+                  {staffPicks.map((book, index) => (
+                    <Link
+                      key={book.id}
+                      href={`/book/${book.id}`}
+                      className="block w-24 transition-transform duration-300 hover:rotate-0 sm:w-28"
+                      style={{ rotate: `${(index - 1) * 3}deg` }}
+                    >
+                      <span className="block transition-transform duration-300 hover:-translate-y-1">
+                        <span className="pointer-events-none relative block aspect-[2/3] w-full overflow-hidden rounded-sm border border-hairline bg-surface shadow-sm">
+                          {book.cover_url ? (
+                            <Image
+                              src={book.cover_url}
+                              alt={`Cover of ${book.title}`}
+                              fill
+                              sizes="112px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-hairline">
+                              <BookOpen className="h-8 w-8" />
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          )}
         </div>
+        <TornEdge position="bottom" />
       </section>
 
-      <section className="relative px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
-              <Sparkles className="h-3.5 w-3.5" />
-              AI-Curated Discovery
-            </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Let AI Paint Your Next Story
-            </h2>
-            <p className="mt-3 text-base text-slate-500">
-              Three ways Lumina turns a vague craving for &ldquo;something
-              good&rdquo; into your next favorite book.
-            </p>
-          </div>
+      {/* For You */}
+      {recommended && recommended.books.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+          <Reveal>
+            <SectionHeading
+              title="For You"
+              sub={forYouSubtitle}
+            />
+          </Reveal>
+          <ShelfRow>
+            {recommended.books.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </ShelfRow>
+        </section>
+      )}
 
-          <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURE_CARDS.map((feature) => {
-              const Icon = feature.icon;
+      {/* Genre shelves */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <Reveal>
+          <SectionHeading
+            title="The shelves"
+            sub="Recommended by genre, drawn from what readers are saving."
+          />
+        </Reveal>
+
+        {shelves.length === 0 ? (
+          <div className="mt-10">
+            <EmptyStateHome />
+          </div>
+        ) : (
+          <div className="mt-4 flex flex-col gap-12">
+            {shelves.map((shelf) => (
+              <div key={shelf.genre}>
+                <Reveal>
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="font-display text-xl font-semibold text-ink">
+                      {shelf.genre}
+                    </h3>
+                    <span className="text-xs text-muted-ink">
+                      {shelf.books.length} on the shelf
+                    </span>
+                  </div>
+                </Reveal>
+                <ShelfRow>
+                  {shelf.books.map((book) => (
+                    <BookCard key={book.id} book={book} />
+                  ))}
+                </ShelfRow>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* A quiet note */}
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
+          <Reveal>
+            {FEATURE_NOTES.map((note) => {
+              const Icon = note.icon;
               return (
-                <div
-                  key={feature.title}
-                  className="rounded-2xl border border-slate-200/60 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-                >
-                  <span
-                    className={`flex h-12 w-12 items-center justify-center rounded-full ${feature.iconBg}`}
-                  >
-                    <Icon className={`h-6 w-6 ${feature.iconColor}`} strokeWidth={2} />
-                  </span>
-                  <h3 className="mt-5 text-lg font-bold text-slate-900">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                    {feature.description}
+                <div key={note.title}>
+                  <Icon className="mx-auto h-6 w-6 text-accent" strokeWidth={1.75} />
+                  <h2 className="mt-4 font-display text-2xl font-semibold text-ink">
+                    {note.title}
+                  </h2>
+                  <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-ink">
+                    {note.description}
                   </p>
                 </div>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {recommended && recommended.books.length > 0 && (
-        <section className="relative px-4 pb-4 pt-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {recommended.basis === "fallback" ? "Fresh arrivals" : "Picked for you"}
-                </span>
-                <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                  For You
-                </h2>
-                <p className="mt-2 text-base text-slate-500">
-                  {recommended.basis === "activity"
-                    ? "Based on what you've saved and rated."
-                    : recommended.basis === "preferences"
-                      ? "Based on your favorite genres."
-                      : "Popular with readers right now — save a few books to personalize this."}
-                </p>
-              </div>
+            {!user && (
               <Link
-                href="/search"
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-300 hover:text-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+                href="/sign-up"
+                className="mt-7 inline-flex items-center gap-1.5 rounded-md bg-ink px-6 py-3 text-sm font-semibold text-surface transition-colors hover:bg-ink/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
-                Find more
+                Start your collection
                 <ArrowRight className="h-4 w-4" />
               </Link>
-            </div>
-
-            <div className="mt-8 flex gap-4 overflow-x-auto pb-3 sm:gap-5">
-              {recommended.books.map((book) => (
-                <BookCard key={book.id} book={book} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      <section className="relative px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                The Gallery
-              </h2>
-              <p className="mt-2 text-base text-slate-500">
-                Recommended by genre, drawn from what&apos;s already in your library.
-              </p>
-            </div>
-            <Link
-              href="/library"
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/60 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-300 hover:text-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
-            >
-              View all
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {shelves.length === 0 ? (
-            <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/50 px-6 py-16 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-500">
-                <BookOpen className="h-6 w-6" />
-              </span>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">
-                No genre shelves yet
-              </h3>
-              <p className="mt-1.5 max-w-sm text-sm text-slate-500">
-                A shelf appears once at least two saved books share a genre.
-                Search for a few titles to get your first one going.
-              </p>
-              <Link
-                href="/search"
-                className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
-              >
-                Go to Search
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          ) : (
-            <div className="mt-10 flex flex-col gap-12">
-              {shelves.map((shelf) => (
-                <div key={shelf.genre}>
-                  <h3 className="text-lg font-bold text-slate-900 sm:text-xl">
-                    {shelf.genre}
-                  </h3>
-                  <div className="mt-4 flex gap-4 overflow-x-auto pb-3 sm:gap-5">
-                    {shelf.books.map((book) => (
-                        <BookCard key={book.id} book={book} />
-                      ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+            )}
+          </Reveal>
         </div>
       </section>
 
@@ -381,3 +312,33 @@ export default function HomeClient({
     </div>
   );
 }
+
+function EmptyStateHome() {
+  return (
+    <div className="relative mx-auto flex max-w-xl flex-col items-center justify-center border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+      <span aria-hidden="true" className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-paper" />
+      <span aria-hidden="true" className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-paper" />
+      <p className="font-display text-lg italic text-muted-ink">
+        The shelves are being stocked.
+      </p>
+      <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-ink">
+        A shelf appears once two or more saved books share a genre. Be the
+        first to start one.
+      </p>
+      <Link
+        href="/search"
+        className="mt-6 inline-flex items-center gap-1.5 rounded-md border border-ink/30 px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+      >
+        Browse some books
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </div>
+  );
+}
+
+type HomeClientProps = {
+  shelves: GenreShelf[];
+  staffPicks?: CachedBook[];
+  user?: AuthUser;
+  recommended?: RecommendationResult | null;
+};
