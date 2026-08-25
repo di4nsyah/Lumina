@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import SiteHeader, { type SiteHeaderUser } from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BookSaveSection from "@/components/BookSaveSection";
+import RatingSection from "@/components/RatingSection";
 
 export const dynamic = "force-dynamic";
 
@@ -121,7 +122,7 @@ export default async function BookPage({ params }: PageProps) {
                   )}
                 </div>
 
-                <div className="mt-5">
+                <div className="mt-5 space-y-4">
                   <BookSaveSection
                     user={siteUser}
                     book={{
@@ -130,6 +131,16 @@ export default async function BookPage({ params }: PageProps) {
                       cover_url: book.cover_url,
                       genre: book.genre,
                     }}
+                  />
+                  <RatingSection
+                    user={siteUser}
+                    book={{
+                      title: book.title,
+                      author: book.author,
+                      cover_url: book.cover_url,
+                      genre: book.genre,
+                    }}
+                    nextPath={`/book/${id}`}
                   />
                 </div>
               </div>
