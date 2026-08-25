@@ -14,10 +14,10 @@
 | P1-04 | `bookService.ts` caching layer | Backend | ✅ | termasuk `getBooksByGenre()` |
 | P1-05 | Homepage/Discover | Frontend | ✅ | hero, navbar glassmorphism |
 | P1-06 | Genre shelves (horizontal scroll) | Frontend | ✅ | minimal 2 buku/shelf |
-| P1-07 | Search page redesign | Frontend | 🔲 | DIBUKA ULANG 2026-08-25: file masih prototype (`alert()`, tanpa skeleton/empty state). Redesign digabung ke pekerjaan P1-10 |
-| P1-08 | Shared chrome (Header/Footer/Shell) | Frontend | ✅ | |
+| P1-07 | Search page redesign | Frontend | ✅ | RESELESAI 2026-08-25: skeleton loading, empty state (belum cari / no hasil), hasil typed penuh, inline feedback per-card via `SaveButton` (spinner → badge Saved/error) |
+| P1-08 | Shared chrome (Header/Footer/Shell) | Frontend | ✅ | DISELESAIKAN 2026-08-25: ekstraksi `SiteHeader`/`SiteFooter`, dipakai Home + Search |
 | P1-09 | Auth (sign up/sign in) | Backend | ✅ | @supabase/ssr cookie session + proxy guard (`/onboarding`,`/library`,`/account` → redirect `/sign-in?next=`), `/sign-in`,`/sign-up`,`/auth/callback`; smoke test 200/307 OK; middleware→proxy codemod Next16 |
-| P1-10 | Save/bookmark buku ke koleksi | Full-stack | 🔲 | butuh P1-09 |
+| P1-10 | Save/bookmark buku ke koleksi | Full-stack | ✅ | tabel `saved_books` + RLS dibuat via SQL editor; service `savedBooks.ts`; batch saved-state detection; tombol save di Search redirect ke login kalau anon. E2E klik manual menyusul verifikasi user |
 | P1-11 | Book detail page | Frontend | 🔲 | |
 | P1-12 | Rating buku | Full-stack | 🔲 | butuh P1-09, P1-11 |
 | P1-13 | Onboarding preference selection | Frontend | 🔲 | butuh P1-09 |
