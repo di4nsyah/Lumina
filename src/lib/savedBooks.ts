@@ -1,5 +1,3 @@
-"use client";
-
 import { createClient } from "@/lib/supabase/client";
 import { getOrSaveBook } from "@/lib/bookService";
 import type { SupabaseClient } from "@supabase/supabase-js";
