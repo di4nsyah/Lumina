@@ -14,7 +14,7 @@
 | P1-04 | `bookService.ts` caching layer | Backend | ✅ | termasuk `getBooksByGenre()` |
 | P1-05 | Homepage/Discover | Frontend | ✅ | hero, navbar glassmorphism |
 | P1-06 | Genre shelves (horizontal scroll) | Frontend | ✅ | minimal 2 buku/shelf |
-| P1-07 | Search page redesign | Frontend | ✅ | skeleton, empty state, inline feedback |
+| P1-07 | Search page redesign | Frontend | 🔲 | DIBUKA ULANG 2026-08-25: file masih prototype (`alert()`, tanpa skeleton/empty state). Redesign digabung ke pekerjaan P1-10 |
 | P1-08 | Shared chrome (Header/Footer/Shell) | Frontend | ✅ | |
 | P1-09 | Auth (sign up/sign in) | Backend | 🔲 | |
 | P1-10 | Save/bookmark buku ke koleksi | Full-stack | 🔲 | butuh P1-09 |

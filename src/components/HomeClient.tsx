@@ -15,6 +15,11 @@ import {
   X,
 } from "lucide-react";
 import type { GenreShelf } from "@/lib/bookService";
+import UserMenu from "@/components/UserMenu";
+
+type AuthUser = {
+  email: string;
+} | null;
 
 type NavLink = {
   label: string;
@@ -75,9 +80,10 @@ function isRecentlyAdded(createdAt?: string): boolean {
 
 type HomeClientProps = {
   shelves: GenreShelf[];
+  user?: AuthUser;
 };
 
-export default function HomeClient({ shelves = [] }: HomeClientProps) {
+export default function HomeClient({ shelves = [], user = null }: HomeClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
@@ -149,13 +155,17 @@ export default function HomeClient({ shelves = [] }: HomeClientProps) {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/sign-in"
-              className="hidden items-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 sm:inline-flex"
-            >
-              <User className="h-4 w-4" />
-              Sign In
-            </Link>
+            {user ? (
+              <UserMenu email={user.email} />
+            ) : (
+              <Link
+                href="/sign-in"
+                className="hidden items-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 sm:inline-flex"
+              >
+                <User className="h-4 w-4" />
+                Sign In
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => setIsMenuOpen((open) => !open)}
@@ -185,14 +195,16 @@ export default function HomeClient({ shelves = [] }: HomeClientProps) {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/sign-in"
-                onClick={() => setIsMenuOpen(false)}
-                className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
-              >
-                <User className="h-4 w-4" />
-                Sign In
-              </Link>
+              {!user && (
+                <Link
+                  href="/sign-in"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
+                >
+                  <User className="h-4 w-4" />
+                  Sign In
+                </Link>
+              )}
             </nav>
           </div>
         )}
