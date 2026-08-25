@@ -36,3 +36,13 @@ body {
   }
 }
 
+@keyframes stamp {
+  from {
+    transform: scale(1.15) rotate(-4deg);
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+

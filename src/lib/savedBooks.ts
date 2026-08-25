@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { getOrSaveBook } from "@/lib/bookService";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type SaveBookInput = {
   title: string;
@@ -14,13 +15,15 @@ export type SaveBookInput = {
  * Returns a Map of result-title -> saved_books.id for books the current
  * user has already saved. Titles that are not cached in `books` yet simply
  * have no entry — they cannot be saved by this user.
+ *
+ * Accepts any authed Supabase client (browser or server cookie client).
  */
 export async function getSavedStateByTitle(
+  supabase: SupabaseClient,
   titles: string[],
 ): Promise<Map<string, string>> {
   if (titles.length === 0) return new Map();
 
-  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

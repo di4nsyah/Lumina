@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { getSavedStateByTitle, type SaveBookInput } from "@/lib/savedBooks";
 import SaveButton from "@/components/SaveButton";
 import type { SiteHeaderUser } from "@/components/SiteHeader";
@@ -17,7 +18,7 @@ export default function BookSaveSection({ user, book }: BookSaveSectionProps) {
     if (!user) return;
 
     let active = true;
-    getSavedStateByTitle([book.title]).then((saved) => {
+    getSavedStateByTitle(createClient(), [book.title]).then((saved) => {
       if (active) setSavedId(saved.get(book.title) ?? null);
     });
     return () => {
@@ -31,7 +32,6 @@ export default function BookSaveSection({ user, book }: BookSaveSectionProps) {
         book={book}
         savedId={savedId}
         isAuthenticated={user !== null}
-        onSavedChange={setSavedId}
       />
     </div>
   );
