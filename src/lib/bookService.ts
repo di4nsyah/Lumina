@@ -227,3 +227,63 @@ export async function getFavoriteGenres(
             | undefined) ?? []
     ).filter((genre): genre is string => typeof genre === 'string');
 }
+
+/**
+ * The user's personal collection as genre shelves. Unlike getBooksByGenre,
+ * single-book shelves are kept — a collection of one is still a shelf.
+ * Requires an AUTHENTICATED client (RLS scopes saved_books to the caller).
+ */
+export async function listSavedCollection(
+    supabase: SupabaseClient,
+    userId: string
+): Promise<{shelves: GenreShelf[]; total: number; savedIdByTitle: Record<string, string>}> {
+    const {data: savedRows, error: savedError} = await supabase
+        .from('saved_books')
+        .select('id,book_id,created_at')
+        .eq('user_id', userId)
+        .order('created_at', {ascending: false});
+
+    if (savedError) {
+        console.error('Error fetching saved books:', savedError);
+        return {shelves: [], total: 0, savedIdByTitle: {}};
+    }
+
+    const rows = (savedRows as {id: string; book_id: string; created_at: string}[] | null) ?? [];
+    if (rows.length === 0) return {shelves: [], total: 0, savedIdByTitle: {}};
+
+    const {data: bookRows, error: booksError} = await supabase
+        .from('books')
+        .select('*')
+        .in('id', rows.map((row) => row.book_id));
+
+    if (booksError) {
+        console.error('Error fetching collection books:', booksError);
+        return {shelves: [], total: 0, savedIdByTitle: {}};
+    }
+
+    const bookById = new Map<string, CachedBook>();
+    for (const book of (bookRows as CachedBook[] | null) ?? []) {
+        bookById.set(String(book.id), book);
+    }
+
+    // Preserve save order (newest first) while grouping by genre.
+    const grouped = new Map<string, CachedBook[]>();
+    let total = 0;
+    const savedIdByTitle: Record<string, string> = {};
+    for (const row of rows) {
+        const book = bookById.get(String(row.book_id));
+        if (!book) continue;
+        total += 1;
+        savedIdByTitle[book.title] = String(row.id);
+        const genre = book.genre?.trim() || 'Unsorted';
+        const existing = grouped.get(genre) ?? [];
+        existing.push(book);
+        grouped.set(genre, existing);
+    }
+
+    const shelves = Array.from(grouped.entries())
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([genre, books]) => ({genre, books}));
+
+    return {shelves, total, savedIdByTitle};
+}
