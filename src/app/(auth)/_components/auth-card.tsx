@@ -1,3 +1,5 @@
+import TapeStrip from "@/components/decor/TapeStrip";
+
 type AuthCardProps = {
   title: string;
   subtitle: string;
@@ -6,11 +8,14 @@ type AuthCardProps = {
 
 export default function AuthCard({ title, subtitle, children }: AuthCardProps) {
   return (
-    <div className="rounded-3xl border border-slate-200/60 bg-white/80 p-8 shadow-sm backdrop-blur-md">
-      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+    <div className="relative rounded-sm border border-hairline bg-surface p-8 shadow-sm">
+      <TapeStrip angle={-45} className="-left-10 -top-5" />
+      <TapeStrip angle={45} className="-right-10 -top-5" />
+
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
         {title}
       </h1>
-      <p className="mt-1.5 text-sm text-slate-500">{subtitle}</p>
+      <p className="mt-1.5 text-sm text-muted-ink">{subtitle}</p>
       <div className="mt-7">{children}</div>
     </div>
   );

@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, LoaderCircle } from "lucide-react";
+import { AlertCircle, LoaderCircle } from "lucide-react";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignInForm() {
@@ -48,21 +50,26 @@ export default function SignInForm() {
       {(error || authErrorFromLink) && (
         <div
           role="alert"
-          className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+          className="border border-dashed border-red-800/30 bg-red-900/5 px-4 py-3 text-sm text-red-900"
         >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{error ?? "Sign-in link was invalid or expired. Please sign in again."}</span>
+          <span className="flex items-start gap-2.5">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              {error ??
+                "Sign-in link was invalid or expired. Please sign in again."}
+            </span>
+          </span>
         </div>
       )}
 
       <div>
         <label
           htmlFor="email"
-          className="mb-1.5 block text-sm font-semibold text-slate-700"
+          className="mb-1.5 block text-sm font-semibold text-ink"
         >
           Email
         </label>
-        <input
+        <Input
           id="email"
           type="email"
           required
@@ -70,18 +77,17 @@ export default function SignInForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-shadow placeholder:text-slate-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-500/20"
         />
       </div>
 
       <div>
         <label
           htmlFor="password"
-          className="mb-1.5 block text-sm font-semibold text-slate-700"
+          className="mb-1.5 block text-sm font-semibold text-ink"
         >
           Password
         </label>
-        <input
+        <Input
           id="password"
           type="password"
           required
@@ -89,33 +95,25 @@ export default function SignInForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Your password"
-          className="w-full rounded-xl border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-shadow placeholder:text-slate-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-500/20"
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-orange-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <Button type="submit" disabled={isLoading} className="mt-2 w-full">
         {isLoading ? (
           <>
             Signing in
             <LoaderCircle className="h-4 w-4 animate-spin" />
           </>
         ) : (
-          <>
-            Sign in
-            <ArrowRight className="h-4 w-4" />
-          </>
+          "Sign in"
         )}
-      </button>
+      </Button>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-muted-ink">
         New to LuminaBooks?{" "}
         <Link
           href="/sign-up"
-          className="font-semibold text-orange-600 transition-colors hover:text-orange-700"
+          className="font-semibold text-accent underline-offset-4 hover:underline"
         >
           Create an account
         </Link>

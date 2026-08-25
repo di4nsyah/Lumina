@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import Wordmark from "@/components/ui/Wordmark";
+import Botanical from "@/components/decor/Botanical";
 
 export default function AuthLayout({
   children,
@@ -7,27 +7,19 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#FBFBF9] px-4 py-12 text-slate-900 antialiased">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-32 -top-24 h-[26rem] w-[26rem] rounded-full bg-amber-300/30 blur-3xl"
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-paper px-4 py-12 text-ink antialiased">
+      <Botanical
+        variant="sprig"
+        className="absolute -left-4 bottom-0 h-56 w-40 rotate-6"
       />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-24 -right-24 h-[22rem] w-[22rem] rounded-full bg-orange-300/25 blur-3xl"
+      <Botanical
+        variant="branch"
+        className="absolute -right-6 top-0 h-48 w-36 -rotate-12"
       />
 
-      <Link
-        href="/"
-        className="relative z-10 mb-8 flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 rounded-full"
-      >
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
-          <BookOpen className="h-5 w-5" strokeWidth={2.25} />
-        </span>
-        <span className="text-lg font-extrabold tracking-tight text-slate-900">
-          Lumina<span className="font-medium text-slate-500">Books</span>
-        </span>
-      </Link>
+      <div className="relative z-10 mb-8">
+        <Wordmark />
+      </div>
 
       <main className="relative z-10 w-full max-w-md">{children}</main>
     </div>
