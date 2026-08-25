@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BookOpen, Menu, User, X } from "lucide-react";
+import Wordmark from "@/components/ui/Wordmark";
 import UserMenu from "@/components/UserMenu";
 
 type NavLink = {
@@ -14,7 +14,6 @@ const NAV_LINKS: NavLink[] = [
   { label: "Discover", href: "/" },
   { label: "Library", href: "/library" },
   { label: "Dashboard", href: "/dashboard" },
-  { label: "Community", href: "/community" },
 ];
 
 export type SiteHeaderUser = {
@@ -29,46 +28,31 @@ export default function SiteHeader({ user = null }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/70 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
-        >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
-            <BookOpen className="h-5 w-5" strokeWidth={2.25} />
-          </span>
-          <span className="text-lg font-extrabold tracking-tight text-slate-900">
-            Lumina<span className="font-medium text-slate-500">Books</span>
-          </span>
-        </Link>
+    <header className="sticky top-0 z-40 border-b border-hairline bg-paper/95">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <Wordmark />
 
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className={`rounded-sm text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${
-                link.label === "Discover"
-                  ? "text-slate-900"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
+              className="text-sm font-medium text-muted-ink transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {user ? (
             <UserMenu email={user.email} />
           ) : (
             <Link
               href="/sign-in"
-              className="hidden items-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 sm:inline-flex"
+              className="hidden rounded-md bg-ink px-5 py-2.5 text-sm font-semibold text-surface transition-colors hover:bg-ink/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 sm:inline-flex"
             >
-              <User className="h-4 w-4" />
-              Sign In
+              Sign in
             </Link>
           )}
           <button
@@ -76,42 +60,51 @@ export default function SiteHeader({ user = null }: SiteHeaderProps) {
             onClick={() => setIsMenuOpen((open) => !open)}
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/60 text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-hairline text-muted-ink transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
           >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <span aria-hidden="true" className="relative block h-3 w-4">
+              <span
+                className={`absolute left-0 block h-px w-4 bg-current transition-all ${
+                  isMenuOpen ? "top-1.5 rotate-45" : "top-0"
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-1.5 block h-px w-4 bg-current transition-opacity ${
+                  isMenuOpen ? "opacity-0" : "opacity-100"
+                }`}
+              />
+              <span
+                className={`absolute left-0 block h-px w-4 bg-current transition-all ${
+                  isMenuOpen ? "top-1.5 -rotate-45" : "top-3"
+                }`}
+              />
+            </span>
           </button>
         </div>
       </div>
 
       {isMenuOpen && (
-        <div className="border-t border-slate-200/50 bg-white/95 px-4 pb-5 pt-3 backdrop-blur-md md:hidden">
-          <nav className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setIsMenuOpen(false)}
-                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  link.label === "Discover"
-                    ? "bg-orange-50 text-orange-600"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {!user && (
-              <Link
-                href="/sign-in"
-                onClick={() => setIsMenuOpen(false)}
-                className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white"
-              >
-                <User className="h-4 w-4" />
-                Sign In
-              </Link>
-            )}
-          </nav>
-        </div>
+        <nav className="border-t border-hairline bg-paper px-4 pb-5 pt-2 md:hidden">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              onClick={() => setIsMenuOpen(false)}
+              className="block rounded-md px-2 py-2.5 text-sm font-medium text-muted-ink transition-colors hover:bg-surface hover:text-ink"
+            >
+              {link.label}
+            </Link>
+          ))}
+          {!user && (
+            <Link
+              href="/sign-in"
+              onClick={() => setIsMenuOpen(false)}
+              className="mt-2 inline-flex w-full items-center justify-center rounded-md bg-ink px-5 py-2.5 text-sm font-semibold text-surface"
+            >
+              Sign in
+            </Link>
+          )}
+        </nav>
       )}
     </header>
   );

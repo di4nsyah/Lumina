@@ -45,24 +45,24 @@ export default function UserMenu({ email }: UserMenuProps) {
         onClick={() => setIsOpen((open) => !open)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="flex items-center gap-2 rounded-full border border-slate-200/60 bg-white py-1 pl-1 pr-3 transition-colors hover:border-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+        className="flex items-center gap-2 rounded-md border border-hairline bg-surface py-1 pl-1 pr-3 transition-colors hover:border-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-500 text-sm font-bold text-white">
+        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-ink text-sm font-semibold text-surface">
           {initial}
         </span>
-        <ChevronDown className="h-4 w-4 text-slate-500" />
+        <ChevronDown className="h-4 w-4 text-muted-ink" />
       </button>
 
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-lg"
+          className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-md border border-hairline bg-surface shadow-sm"
         >
-          <div className="border-b border-slate-100 px-4 py-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          <div className="border-b border-hairline px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-ink/70">
               Signed in as
             </p>
-            <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">
+            <p className="mt-0.5 truncate text-sm font-semibold text-ink">
               {email}
             </p>
           </div>
@@ -71,7 +71,7 @@ export default function UserMenu({ email }: UserMenuProps) {
             role="menuitem"
             onClick={handleSignOut}
             disabled={isSigningOut}
-            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-orange-50 hover:text-orange-600 disabled:opacity-60"
+            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-muted-ink transition-colors hover:bg-paper hover:text-accent disabled:opacity-60"
           >
             <LogOut className="h-4 w-4" />
             {isSigningOut ? "Signing out..." : "Sign out"}
