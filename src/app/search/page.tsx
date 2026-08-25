@@ -1,12 +1,12 @@
 'use client';
 
 import {useState} from 'react';
-import {searchGoogleBooks} from '@/lib/googleBooks';
+import {searchGoogleBooks, type GoogleBook} from '@/lib/googleBooks';
 import {getOrSaveBook} from '@/lib/bookService';
 
 export default function SearchPage() {
     const [query, setQuery] = useState('');
-    const [books, setBooks] = useState<any[]>([]);
+    const [books, setBooks] = useState<GoogleBook[]>([]);
     const [loading, setLoading] = useState(false);
 
     const handleSearch = async (e: React.FormEvent) => {
@@ -18,7 +18,7 @@ export default function SearchPage() {
         setLoading(false);
     };
 
-    const handleSaveToCache = async (book: any) => {
+    const handleSaveToCache = async (book: GoogleBook) => {
     const saved = await getOrSaveBook({
       title: book.title,
       author: book.author,
