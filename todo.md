@@ -18,7 +18,7 @@
 | P1-08 | Shared chrome (Header/Footer/Shell) | Frontend | ✅ | DISELESAIKAN 2026-08-25: ekstraksi `SiteHeader`/`SiteFooter`, dipakai Home + Search |
 | P1-09 | Auth (sign up/sign in) | Backend | ✅ | @supabase/ssr cookie session + proxy guard (`/onboarding`,`/library`,`/account` → redirect `/sign-in?next=`), `/sign-in`,`/sign-up`,`/auth/callback`; smoke test 200/307 OK; middleware→proxy codemod Next16 |
 | P1-10 | Save/bookmark buku ke koleksi | Full-stack | ✅ | tabel `saved_books` + RLS dibuat via SQL editor; service `savedBooks.ts`; batch saved-state detection; tombol save di Search redirect ke login kalau anon. E2E klik manual menyusul verifikasi user |
-| P1-11 | Book detail page | Frontend | 🔲 | |
+| P1-11 | Book detail page | Frontend | ✅ | `/book/[id]` dual-source: uuid → Supabase cache, else Google volume API; loading.tsx skeleton; styled not-found panel; SaveButton terintegrasi. Live test: cached-row path 200 markup-ok; google-path dibatasi kuota API harian (429) tapi kode symmetric |
 | P1-12 | Rating buku | Full-stack | 🔲 | butuh P1-09, P1-11 |
 | P1-13 | Onboarding preference selection | Frontend | 🔲 | butuh P1-09 |
 | P1-14 | Rekomendasi content-based | Backend | 🔲 | butuh P1-10, P1-13 |
