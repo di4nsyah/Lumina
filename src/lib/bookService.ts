@@ -287,3 +287,61 @@ export async function listSavedCollection(
 
     return {shelves, total, savedIdByTitle};
 }
+
+export type ReadingStats = {
+    savedCount: number;
+    ratedCount: number;
+    avgGiven: number | null;
+    topGenres: {genre: string; count: number}[];
+};
+
+/** Aggregates the user's own activity. Requires an AUTHENTICATED client. */
+export async function getReadingStats(
+    supabase: SupabaseClient,
+    userId: string
+): Promise<ReadingStats> {
+    const [{data: savedRows}, {data: ratedRows}] = await Promise.all([
+        supabase.from('saved_books').select('book_id').eq('user_id', userId),
+        supabase.from('ratings').select('book_id,rating').eq('user_id', userId)
+    ]);
+
+    const saved = (savedRows as {book_id: string}[] | null) ?? [];
+    const rated = (ratedRows as {book_id: string; rating: number}[] | null) ?? [];
+
+    const interactedIds = new Set<string>();
+    for (const row of saved) interactedIds.add(String(row.book_id));
+    for (const row of rated) interactedIds.add(String(row.book_id));
+
+    let topGenres: {genre: string; count: number}[] = [];
+    if (interactedIds.size > 0) {
+        const {data: books} = await supabase
+            .from('books')
+            .select('genre')
+            .in('id', Array.from(interactedIds));
+
+        const counts = new Map<string, number>();
+        for (const row of (books as {genre: string | null}[] | null) ?? []) {
+            const genre = row.genre?.trim();
+            if (!genre) continue;
+            counts.set(genre, (counts.get(genre) ?? 0) + 1);
+        }
+        topGenres = Array.from(counts.entries())
+            .map(([genre, count]) => ({genre, count}))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5);
+    }
+
+    return {
+        savedCount: saved.length,
+        ratedCount: rated.length,
+        avgGiven:
+            rated.length > 0
+                ? Math.round(
+                      (rated.reduce((total, row) => total + row.rating, 0) /
+                          rated.length) *
+                          10,
+                  ) / 10
+                : null,
+        topGenres,
+    };
+}
