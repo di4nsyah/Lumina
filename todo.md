@@ -24,6 +24,23 @@
 | P1-14 | Rekomendasi content-based | Backend | ✅ | `getRecommendedBooks()` di bookService (server cookie client → RLS-aware): basis `activity` (saved+rated genre) > `preferences` (onboarding) > `fallback` (recent); shelf "For You" di Home dengan subtitle sesuai basis; exclude buku yang sudah diinteraksi; dedupe by title |
 | P1-15 | Deploy ke Vercel | DevOps | 🔲 | |
 
+## Phase 1.5 — Indie Bookshop Redesign (2026-08-25, spec: `redesign.md`)
+
+| ID | Task | Status | Catatan |
+|---|---|---|---|
+| R-01 | Token layer + Fraunces/Work Sans + text-only Wordmark | ✅ | `globals.css` @theme inline; banned patterns enforced |
+| R-02 | Decor primitives (Reveal/Tape/TornEdge/Squiggle/Botanical) | ✅ | semua aria-hidden, transform/opacity only |
+| R-03 | UI primitives (Button/StampBadge/SectionHeading/Input/EmptyState/Skeleton) | ✅ | `src/components/ui/` |
+| R-04 | Header/footer chrome | ✅ | nav jadi Discover/Library/Dashboard (Community dihapus), torn-seam footer |
+| R-05 | Home reskin | ✅ | editorial masthead + taped staff picks + shelf hairlines; hero search → /search?q= wired |
+| R-06 | Auth reskin | ✅ | taped cards + botanical sprigs |
+| R-07 | Search reskin | ✅ | server-driven via ?q= URL (SearchForm client island); SaveButton stamp-thunk + optimistic state |
+| R-08 | Book detail reskin | ✅ | serif reading column, stamp-frame cover, rating thunk |
+| R-09 | Onboarding reskin | ✅ | sticker-sheet genre stamps |
+| R-10 | Library page (BARU) | ✅ | `listSavedCollection()`, genre shelves incl. single-book, unsave button |
+| R-11 | Dashboard page (BARU) | ✅ | ticket-stub stats + taste bars dari aktivitas user |
+| R-12 | Legal pages + 404 | ✅ | privacy/terms/contact honest content; torn 404 |
+
 ## Bug/Fix Log (histori — sudah selesai)
 
 | Isu | Root Cause | Fix |
