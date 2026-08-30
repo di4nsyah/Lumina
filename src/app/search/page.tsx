@@ -1,71 +1,142 @@
-'use client';
+import Image from "next/image";
+import Link from "next/link";
+import { BookOpen } from "lucide-react";
+import { searchGoogleBooks } from "@/lib/googleBooks";
+import { getSavedStateByTitle } from "@/lib/savedBooks";
+import { createClient } from "@/lib/supabase/server";
+import SiteHeader, { type SiteHeaderUser } from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
+import SaveButton from "@/components/SaveButton";
+import SearchForm from "@/components/SearchForm";
+import SectionHeading from "@/components/ui/SectionHeading";
+import EmptyState from "@/components/ui/EmptyState";
 
-import {useState} from 'react';
-import {searchGoogleBooks} from '@/lib/googleBooks';
-import {getOrSaveBook} from '@/lib/bookService';
+export const dynamic = "force-dynamic";
 
-export default function SearchPage() {
-    const [query, setQuery] = useState('');
-    const [books, setBooks] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
+export const metadata = {
+  title: "Search",
+};
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!query) return;
-        setLoading(true);
-        const results = await searchGoogleBooks(query);
-        setBooks(results);
-        setLoading(false);
-    };
+type SearchPageProps = {
+  searchParams: Promise<{ q?: string }>;
+};
 
-    const handleSaveToCache = async (book: any) => {
-    const saved = await getOrSaveBook({
-      title: book.title,
-      author: book.author,
-      cover_url: book.cover_url,
-    });
-    if (saved) {
-      alert(`Berhasil menyimpan/cache buku "${saved.title}" ke Supabase!`);
-    } else {
-      alert('Gagal menyimpan buku.');
-    }
-  };
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const { q } = await searchParams;
+  const query = q?.trim() ?? "";
 
-    return (
-    <main className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Cari & Cache Buku</h1>
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Cari judul buku..."
-          className="border p-2 rounded flex-grow text-white"
-        />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-          {loading ? 'Mencari...' : 'Cari'}
-        </button>
-      </form>
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const siteUser: SiteHeaderUser = user ? { email: user.email ?? "" } : null;
 
-      <div className="space-y-4">
-        {books.map((book, index) => (
-          <div key={index} className="border p-4 rounded flex gap-4 items-center justify-between">
-            <div className="flex gap-4 items-center">
-              {book.cover_url && <img src={book.cover_url} alt={book.title} className="w-12 h-16 object-cover" />}
-              <div>
-                <h2 className="font-semibold">{book.title}</h2>
-                <p className="text-sm text-white">{book.author}</p>
-              </div>
+  // Server-driven search: the URL is the single source of truth.
+  const outcome = query ? await searchGoogleBooks(query) : null;
+  const results = outcome?.ok ? outcome.books : [];
+
+  const savedMap =
+    user && siteUser && results.length > 0
+      ? await getSavedStateByTitle(
+          supabase,
+          results.map((b) => b.title),
+        )
+      : new Map<string, string>();
+
+  return (
+    <div className="min-h-screen bg-paper text-ink antialiased">
+      <SiteHeader user={siteUser} />
+
+      <main className="mx-auto max-w-6xl px-4 pb-20 pt-14 sm:px-6 lg:px-8">
+        <SectionHeading title="Browse the stacks" squiggle />
+
+        <SearchForm initialQuery={query} />
+
+        <div className="mt-12">
+          {!query && (
+            <EmptyState
+              title="What are you in the mood for?"
+              body='Try an author like "Terry Pratchett", a title, or something vaguer like "space opera".'
+            />
+          )}
+
+          {query && outcome?.ok && (
+            <p className="text-sm text-muted-ink" aria-live="polite">
+              {results.length} result{results.length === 1 ? "" : "s"} for{" "}
+              <span className="font-semibold text-ink">&ldquo;{query}&rdquo;</span>
+            </p>
+          )}
+
+          {query && outcome && !outcome.ok && (
+            <EmptyState
+              title={
+                outcome.reason === "quota"
+                  ? "Search is taking a breather"
+                  : "Search is unavailable right now"
+              }
+              body={
+                outcome.reason === "quota"
+                  ? "We've hit our daily book-search limit. The shelves will be restocked tomorrow — saving and rating still work."
+                  : "Something went wrong reaching the book catalogue. Try again in a moment."
+              }
+            />
+          )}
+
+          {query && results.length > 0 && (
+            <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {results.map((book) => (
+                <article key={book.google_id} className="flex flex-col">
+                  <Link
+                    href={`/book/${book.google_id}`}
+                    className="group block focus-visible:outline-none"
+                  >
+                    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-sm border border-hairline bg-surface transition-transform duration-300 group-hover:-translate-y-0.5">
+                      {book.cover_url ? (
+                        <Image
+                          src={book.cover_url}
+                          alt={`Cover of ${book.title} by ${book.author}`}
+                          fill
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-hairline">
+                          <BookOpen className="h-10 w-10" />
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+
+                  <div className="mt-2.5 flex flex-1 flex-col gap-2.5">
+                    <div className="min-w-0">
+                      <h2 className="line-clamp-1 font-display text-sm font-semibold text-ink sm:text-base">
+                        {book.title}
+                      </h2>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-ink sm:text-sm">
+                        {book.author}
+                      </p>
+                    </div>
+                    <div className="mt-auto pt-1">
+                      <SaveButton
+                        book={{
+                          title: book.title,
+                          author: book.author,
+                          cover_url: book.cover_url,
+                          genre: book.genre || undefined,
+                        }}
+                        savedId={savedMap.get(book.title) ?? null}
+                        isAuthenticated={siteUser !== null}
+                      />
+                    </div>
+                  </div>
+                </article>
+              ))}
             </div>
-            <button
-              onClick={() => handleSaveToCache(book)}
-              className="bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700"
-            >
-              Cache ke DB
-            </button>
-          </div>
-        ))}
-      </div>
-    </main>
-    );
+          )}
+        </div>
+      </main>
+
+      <SiteFooter />
+    </div>
+  );
 }
