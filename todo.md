@@ -53,17 +53,17 @@
 
 | Task | Status |
 |---|---|
-| Collaborative filtering | 🔲 |
-| Halaman koleksi user (lanjutan) | 🔲 |
-| Fitur engagement/validasi | 🔲 |
+| Collaborative filtering | 🔄 |
+| Halaman koleksi user (lanjutan) | 🔄 |
+| Fitur engagement/validasi | 🔄 |
 
 ## Phase 3 — Backlog
 
 | Task | Status |
 |---|---|
-| Rekomendasi AI lanjutan | 🔲 |
-| Fitur sosial | 🔲 |
-| Fitur growth | 🔲 |
+| Rekomendasi AI lanjutan | 🔄 |
+| Fitur sosial | 🔄 |
+| Fitur growth | 🔄 |
 
 ## Cara Update File Ini
 1. Setiap selesai satu task, ubah status jadi ✅ dan isi kolom Catatan singkat (apa yang dibuat/keputusan penting).

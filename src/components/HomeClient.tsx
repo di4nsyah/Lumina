@@ -22,6 +22,7 @@ import TapeStrip from "@/components/decor/TapeStrip";
 import TornEdge from "@/components/decor/TornEdge";
 import Squiggle from "@/components/decor/Squiggle";
 
+
 type AuthUser = {
   email: string;
 } | null;
@@ -36,14 +37,14 @@ const GENRE_TAGS: string[] = [
 
 function BookCover({ book }: { book: CachedBook }) {
   return (
-    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-sm border border-hairline bg-surface">
+    <div className="book-spine book-shadow relative aspect-[2/3] w-full overflow-hidden rounded-sm border border-hairline bg-surface">
       {book.cover_url ? (
         <Image
           src={book.cover_url}
           alt={`Cover of ${book.title} by ${book.author}`}
           fill
           sizes="(max-width: 640px) 45vw, 176px"
-          className="object-cover"
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-hairline">
@@ -58,7 +59,7 @@ function BookCard({ book }: { book: CachedBook }) {
   return (
     <article className="w-36 shrink-0 sm:w-44">
       <Link href={`/book/${book.id}`} className="group block focus-visible:outline-none">
-        <div className="transition-transform duration-300 group-hover:-translate-y-0.5">
+        <div className="transition-transform duration-300 group-hover:-translate-y-1 group-hover:rotate-1">
           <BookCover book={book} />
         </div>
         <h3 className="mt-2.5 line-clamp-1 font-display text-sm font-semibold text-ink sm:text-base">

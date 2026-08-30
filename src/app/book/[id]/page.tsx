@@ -8,6 +8,7 @@ import SiteFooter from "@/components/SiteFooter";
 import BookSaveSection from "@/components/BookSaveSection";
 import RatingSection from "@/components/RatingSection";
 import StampBadge from "@/components/ui/StampBadge";
+import ShareButton from "@/components/ShareButton";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +30,12 @@ type PageProps = {
 async function loadBook(id: string): Promise<BookDetail | null> {
   if (UUID_PATTERN.test(id)) {
     const supabase = await createClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("books")
       .select("title,author,cover_url,genre")
       .eq("id", id)
       .maybeSingle();
-    if (data) {
+    if (data && !error) {
       const row = data as {
         title: string;
         author: string;
@@ -51,7 +52,14 @@ async function loadBook(id: string): Promise<BookDetail | null> {
     }
   }
 
-  return getBookById(id);
+  try {
+    const book = await getBookById(id);
+    if (book) return book;
+  } catch (err) {
+    console.warn("Error loading book detail:", err);
+  }
+
+  return null;
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -141,6 +149,11 @@ export default async function BookPage({ params }: PageProps) {
                     genre: book.genre,
                   }}
                   nextPath={`/book/${id}`}
+                />
+                <ShareButton
+                  title={book.title}
+                  author={book.author}
+                  url={`/book/${id}`}
                 />
               </div>
             </div>

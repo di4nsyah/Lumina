@@ -113,7 +113,7 @@ export async function getBooksByGenre(
         .slice(0, maxShelves);
 }
 
-export type RecommendationBasis = 'preferences' | 'activity' | 'fallback';
+export type RecommendationBasis = 'preferences' | 'activity' | 'collaborative' | 'fallback';
 
 export type RecommendationResult = {
     books: CachedBook[];
@@ -174,10 +174,41 @@ export async function getRecommendedBooks(
         new Set([...preferredGenres, ...activityGenres])
     );
 
-    if (candidateGenres.length === 0 || interactedIds.size + preferredGenres.length < 3) {
-        return {books: await getRecentBooks(limit), basis: 'fallback'};
+    // --- Collaborative filtering: find users with similar tastes ---
+    let collaborativeIds: string[] = [];
+    if (interactedIds.size > 0) {
+        // Find users who saved/rated books in the candidate genres
+        const {data: similarUsers} = await supabase
+            .from('saved_books')
+            .select('user_id, book_id')
+            .in('book_id', Array.from(interactedIds))
+            .neq('user_id', userId)
+            .limit(20);
+
+        if (similarUsers && similarUsers.length > 0) {
+            const similarUserIds = new Set(similarUsers.map((r) => r.user_id));
+            // Get books those similar users saved (that the current user hasn't seen)
+            const {data: similarSaved} = await supabase
+                .from('saved_books')
+                .select('book_id')
+                .in('user_id', Array.from(similarUserIds));
+
+            if (similarSaved && similarSaved.length > 0) {
+                const similarBookIds: Set<string> = new Set();
+                for (const r of similarSaved) {
+                    similarBookIds.add(r.book_id);
+                }
+                collaborativeIds = [];
+                for (const id of similarBookIds) {
+                    if (!interactedIds.has(id)) {
+                        collaborativeIds.push(id);
+                    }
+                }
+            }
+        }
     }
 
+    // --- Combine content-based + collaborative ---
     const {data: matches, error} = await supabase
         .from('books')
         .select('*')
@@ -187,27 +218,51 @@ export async function getRecommendedBooks(
 
     if (error) {
         console.error('Error fetching recommendations:', error);
-        return {books: [], basis: 'fallback'};
+        return {books: await getRecentBooks(limit), basis: 'fallback'};
     }
 
     const seenTitles = new Set<string>();
+    const allSeenIds = new Set([
+        ...interactedIds,
+        ...(collaborativeIds.length > 0 ? collaborativeIds : []),
+    ]);
+
     const recommendations = ((matches as CachedBook[] | null) ?? [])
         .filter((book) => {
             const id = String(book.id);
-            if (interactedIds.has(id)) return false;
+            if (allSeenIds.has(id)) return false;
             if (seenTitles.has(book.title)) return false;
             seenTitles.add(book.title);
             return true;
         })
-        .slice(0, limit);
+        .slice(0, limit * 2); // pull extra to allow collaborative blend
 
-    if (recommendations.length < Math.min(2, limit)) {
+    // Blend: give slight boost to books also in collaborative set
+    const collaborativeSet = new Set(collaborativeIds);
+
+    const blended = recommendations.map((book): CachedBook & {_boost: number} => {
+        const bookId = String(book.id);
+        const boost = collaborativeSet.has(bookId) ? 1.2 : 1.0;
+        return {...book, _boost: boost};
+    });
+
+    blended.sort((a, b) => (b._boost ?? 1.0) - (a._boost ?? 1.0));
+
+    const finalRecommendations = blended.slice(0, limit);
+
+    if (finalRecommendations.length < Math.min(2, limit)) {
         return {books: await getRecentBooks(limit), basis: 'fallback'};
     }
 
+    const basis = activityGenres.length > 0 || collaborativeIds.length > 0
+        ? collaborativeIds.length > activityGenres.length
+            ? 'collaborative'
+            : 'activity'
+        : 'preferences';
+
     return {
-        books: recommendations,
-        basis: activityGenres.length > 0 ? 'activity' : 'preferences'
+        books: finalRecommendations,
+        basis,
     };
 }
 

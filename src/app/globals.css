@@ -20,29 +20,35 @@
   --font-body: var(--font-work-sans);
 }
 
+/* Paper texture via subtle background */
 body {
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(33, 28, 21, 0.02) 1px, transparent 0);
+  background-size: 24px 24px;
   color: var(--ink);
   font-family: var(--font-work-sans), sans-serif;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* Custom utilities - these MUST be simple CSS, no @layer */
+.paper-card {
+  box-shadow: 0 1px 2px rgba(33, 28, 21, 0.05), 0 2px 8px rgba(33, 28, 21, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-@keyframes stamp {
-  from {
-    transform: scale(1.15) rotate(-4deg);
-  }
-  to {
-    transform: scale(1) rotate(0deg);
-  }
+.card-elevated {
+  box-shadow: 0 2px 8px rgba(33, 28, 21, 0.1), 0 4px 16px rgba(33, 28, 21, 0.08);
 }
 
+.text-ink { color: var(--ink); }
+.text-muted-ink { color: var(--muted); }
+.text-hairline { color: var(--hairline); }
+.text-accent { color: var(--accent); }
 
+/* Button styles */
+.btn {
+  @apply rounded-md border border-hairline bg-surface px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-ink/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2;
+}
+
+.btn-primary { @apply bg-ink text-surface hover:bg-ink/90; }
+.btn-accent { @apply bg-accent text-surface hover:bg-accent/90; }
+.btn-ghost { @apply rounded-md border border-ink/25 bg-transparent px-4 py-2 text-sm text-ink hover:bg-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2; }
+.btn-book { @apply rounded-sm py-3 px-4 text-sm font-medium text-ink transition-colors hover:bg-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2; }

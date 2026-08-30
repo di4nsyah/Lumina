@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, ChevronDown } from "lucide-react";
+import { LogOut, ChevronDown, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type UserMenuProps = {
@@ -75,6 +75,18 @@ export default function UserMenu({ email }: UserMenuProps) {
           >
             <LogOut className="h-4 w-4" />
             {isSigningOut ? "Signing out..." : "Sign out"}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              router.push("/account");
+              setIsOpen(false);
+            }}
+            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-accent transition-colors hover:bg-paper hover:text-accent"
+          >
+            <UserRound className="h-4 w-4" strokeWidth={2} />
+            Account
           </button>
         </div>
       )}
